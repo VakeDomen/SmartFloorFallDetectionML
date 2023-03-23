@@ -15,12 +15,15 @@ Y_train = np.load("../data/Y_train.npy")
 X_test = np.load("../data/X_test.npy")
 Y_test = np.load("../data/Y_test.npy")
        
+print("Reshaping data...")
+X_train = np.expand_dims(X_train, axis=-1)
+X_test = np.expand_dims(X_test, axis=-1)
 
 print("Building model...")
 
 model=Sequential()
 #adding convolution layer
-model.add(Conv2D(32,(3,3),activation='relu',input_shape=(300,16,1)))
+model.add(Conv2D(32,(3,3),activation='relu',input_shape=(300,16, 1)))
 #adding pooling layer
 model.add(MaxPool2D(2,2))
 #adding fully connected layer
@@ -35,7 +38,7 @@ print("Fitting model...")
 history = model.fit(X_train,Y_train,epochs=10, validation_data=(X_test, Y_test))
 
 
-model.save('../model/CNN')
+model.save('../models/CNN')
 
 
 
