@@ -37,7 +37,7 @@ model.fit(X_train, Y_train, verbose=True)
 
 print("Saving model...")
 model.save_model(
-    "CatBoostModel.cmb",
+    "../models/CatBoostModel.cmb",
     format="cbm",
     export_parameters=None,
     pool=None
