@@ -1,9 +1,15 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.backend import manual_variable_initialization 
+
+manual_variable_initialization(True)
+
 
 # Define the Transformer model architecture
 def transformer_model(hidden_size, num_layers, num_heads, dropout_rate):
@@ -63,7 +69,7 @@ optimizer = keras.optimizers.Adam(learning_rate)
 
 print("Compiling model...")
 # Compile the model
-model.compile(optimizer=optimizer, loss=loss_fn, metrics=["accuracy"])
+model.compile(optimizer=optimizer, loss=loss_fn, metrics=["binary_accuracy"])
 
 
 print("Fitting model...")
@@ -71,6 +77,6 @@ print("Fitting model...")
 model.fit(train_dataset, epochs=num_epochs, verbose=1)
 
 print("Saving model...")
-model.save('../models/Transformer')
+model.save('../models/transformer.h5')
 
 print("Done!")
