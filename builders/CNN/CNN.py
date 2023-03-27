@@ -35,11 +35,11 @@ Y = []
 print("Loading data...")
 if USE_FOLDS:
     for i in tqdm(range(FOLDS)):
-        X.append(np.load(f"../data/folds/X{i}.npy"))
-        Y.append(np.load(f"../data/folds/Y{i}.npy"))
+        X.append(np.load(f"../../data/folds/X{i}.npy"))
+        Y.append(np.load(f"../../data/folds/Y{i}.npy"))
 else:
-    X.append(np.load("../data/X_train.npy"))
-    Y.append(np.load("../data/Y_train.npy"))
+    X.append(np.load("../../data/X_train.npy"))
+    Y.append(np.load("../../data/Y_train.npy"))
        
 print("Reshaping data...")
 for i in tqdm(range(len(X))):
@@ -60,14 +60,14 @@ if USE_FOLDS:
         print(Y[i].shape)
         print(f"Fitting model {i}/{FOLDS}")
         model.fit(X_train, Y_train, epochs=10, validation_data=(X[i], Y[i]))
-        model.save(f"../models/CNN/f{i}_CNN.h5")
+        model.save(f"../../models/CNN/f{i}_CNN.h5")
 
 else:
     print("Building model...")
     model = build_model()
     print("Fitting model...")
     history = model.fit(X[0], Y[0], epochs=10)
-    model.save("../models/CNN.h5")
+    model.save("../../models/CNN.h5")
 
 
 
