@@ -4,3 +4,4 @@ Y_test.npy
 Y_train.npy
 negativeSet.csv
 positiveSet.csv
+folds/*
