@@ -49,19 +49,15 @@ for i in tqdm(range(len(X))):
 if USE_FOLDS:
     print("Fitting models...")
     for i in range(FOLDS):
-        print(f"Building model {i}...")
+        print(f"Building model {i+1}...")
         model = build_model()
         print(f"Preparing learning folds...")
         X_train = np.concatenate((X[:i] + X[i+1:]))
         Y_train = np.concatenate((Y[:i] + Y[i+1:]))
-        print(X_train.shape)
-        print(Y_train.shape)
-        print(X[i].shape)
-        print(Y[i].shape)
-        print(f"Fitting model {i}/{FOLDS}")
+        print(f"Fitting model {i+1}/{FOLDS}")
         model.fit(X_train, Y_train, epochs=10, validation_data=(X[i], Y[i]))
         model.save(f"../../models/CNN/f{i}_CNN.h5")
-
+        gc.collect()
 else:
     print("Building model...")
     model = build_model()

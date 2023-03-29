@@ -52,7 +52,7 @@ if USE_FOLDS:
         model.fit(X_train, Y_train, verbose=True)
         print("Saving model...")
         model.save_model(f"../../models/CatBoost/f{i}_CatBoost.cbm", format="cbm")
-
+        gc.collect()
 else:
     print("Building model...")
     model = build_model()
