@@ -10,7 +10,7 @@ from tensorflow.keras.backend import manual_variable_initialization
 manual_variable_initialization(True)
 from tqdm import tqdm
 
-FOLDS = 1 
+FOLDS = 5 
 
 ####################### Setting up data ########################
 print("Loading test data...")
