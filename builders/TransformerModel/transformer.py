@@ -7,8 +7,13 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.backend import manual_variable_initialization 
-
 manual_variable_initialization(True)
+from tqdm import tqdm
+import gc
+
+
+USE_FOLDS = True
+FOLDS = 5
 
 
 # Define the Transformer model architecture
@@ -36,13 +41,16 @@ def transformer_model(hidden_size, num_layers, num_heads, dropout_rate):
 
     return model
 
-
-
+X = []
+Y = []
 print("Loading data...")
-X_train = np.load("../data/X_train.npy")
-Y_train = np.load("../data/Y_train.npy")
-X_test = np.load("../data/X_test.npy")
-Y_test = np.load("../data/Y_test.npy")
+if USE_FOLDS:
+    for i in tqdm(range(FOLDS)):
+        X.append(np.load(f"../../data/folds/X{i}.npy"))
+        Y.append(np.load(f"../../data/folds/Y{i}.npy"))
+else:
+    X.append(np.load("../../data/X_train.npy"))
+    Y.append(np.load("../../data/Y_train.npy"))
        
 
 # Define the hyperparameters
@@ -54,29 +62,47 @@ batch_size = 32
 learning_rate = 1e-4
 num_epochs = 10
 
-print("Build dataset...")
-# Create a TensorFlow Dataset for the training data
-train_dataset = tf.data.Dataset.from_tensor_slices((X_train, Y_train))
-train_dataset = train_dataset.batch(batch_size).shuffle(10000)
-
-print("Build model...")
-# Initialize the Transformer model
-model = transformer_model(hidden_size, num_layers, num_heads, dropout_rate)
-
-# Define the loss function and optimizer
-loss_fn = keras.losses.MeanSquaredError()
-optimizer = keras.optimizers.Adam(learning_rate)
-
-print("Compiling model...")
-# Compile the model
-model.compile(optimizer=optimizer, loss=loss_fn, metrics=["binary_accuracy"])
 
 
-print("Fitting model...")
-# Train the model
-model.fit(train_dataset, epochs=num_epochs, verbose=1)
+if USE_FOLDS:
+    for i in range(FOLDS):
+        print(f"Building model {i+1}...")
+        model = transformer_model(hidden_size, num_layers, num_heads, dropout_rate)
+        print(f"Preparing learning folds...")
+        X_train = np.concatenate((X[:i] + X[i+1:]))
+        Y_train = np.concatenate((Y[:i] + Y[i+1:]))
+        
+        train_dataset = tf.data.Dataset.from_tensor_slices((X_train, Y_train))
+        train_dataset = train_dataset.batch(batch_size).shuffle(10000)
 
-print("Saving model...")
-model.save('../models/transformer.h5')
+        # Define the loss function and optimizer
+        loss_fn = keras.losses.MeanSquaredError()
+        optimizer = keras.optimizers.Adam(learning_rate)
+        
+        print("Compiling model...")
+        # Compile the model
+        model.compile(optimizer=optimizer, loss=loss_fn, metrics=["binary_accuracy"])
+
+
+        print(f"Fitting model {i+1}/{FOLDS}")
+        # Train the model
+        model.fit(train_dataset, epochs=num_epochs, verbose=1)
+
+        model.save(f"../../models/Transformer/f{i}_Transformer.h5")
+        gc.collect()
+else:
+    print("Building model...")
+    model = transformer_model(hidden_size, num_layers, num_heads, dropout_rate)
+    print("Fitting model...")
+    train_dataset = tf.data.Dataset.from_tensor_slices((X[0], Y[0]))
+    train_dataset = train_dataset.batch(batch_size).shuffle(10000)
+    # Define the loss function and optimizer
+    loss_fn = keras.losses.MeanSquaredError()
+    optimizer = keras.optimizers.Adam(learning_rate)
+    print("Compiling model...")
+    # Compile the model
+    model.compile(optimizer=optimizer, loss=loss_fn, metrics=["binary_accuracy"])
+    history = model.fit(train_dataset, epochs=num_epochs, verbose=1)
+    model.save("../../models/Transformer.h5")
 
 print("Done!")
