@@ -10,9 +10,12 @@ from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import Dense
 from tqdm import tqdm
+import configparser
 
-USE_FOLDS = True
-FOLDS = 5
+config = configparser.ConfigParser()
+config.read('../../config.ini')
+FOLDS = config.get('data-prepocess', 'folds')
+
 
 
 def build_model():
@@ -33,38 +36,24 @@ def build_model():
 X = []
 Y = []
 print("Loading data...")
-if USE_FOLDS:
-    for i in tqdm(range(FOLDS)):
-        X.append(np.load(f"../../data/folds/X{i}.npy"))
-        Y.append(np.load(f"../../data/folds/Y{i}.npy"))
-else:
-    X.append(np.load("../../data/X_train.npy"))
-    Y.append(np.load("../../data/Y_train.npy"))
+for i in tqdm(range(FOLDS)):
+    X.append(np.load(f"../../data/folds/X{i}.npy"))
+    Y.append(np.load(f"../../data/folds/Y{i}.npy"))
        
 print("Reshaping data...")
 for i in tqdm(range(len(X))):
     X[i] = np.expand_dims(X[i], axis=-1)
 
 
-if USE_FOLDS:
-    print("Fitting models...")
-    for i in range(FOLDS):
-        print(f"Building model {i+1}...")
-        model = build_model()
-        print(f"Preparing learning folds...")
-        X_train = np.concatenate((X[:i] + X[i+1:]))
-        Y_train = np.concatenate((Y[:i] + Y[i+1:]))
-        print(f"Fitting model {i+1}/{FOLDS}")
-        model.fit(X_train, Y_train, epochs=10, validation_data=(X[i], Y[i]))
-        model.save(f"../../models/CNN/f{i}_CNN.h5")
-        gc.collect()
-else:
-    print("Building model...")
+print("Fitting models...")
+for i in range(FOLDS):
+    print(f"Building model {i+1}...")
     model = build_model()
-    print("Fitting model...")
-    history = model.fit(X[0], Y[0], epochs=10)
-    model.save("../../models/CNN.h5")
-
-
-
+    print(f"Preparing learning folds...")
+    X_train = np.concatenate((X[:i] + X[i+1:]))
+    Y_train = np.concatenate((Y[:i] + Y[i+1:]))
+    print(f"Fitting model {i+1}/{FOLDS}")
+    model.fit(X_train, Y_train, epochs=10, validation_data=(X[i], Y[i]))
+    model.save(f"../../models/CNN/f{i}_CNN.h5")
+    gc.collect()
 
