@@ -14,7 +14,7 @@ import configparser
 
 config = configparser.ConfigParser()
 config.read('../../config.ini')
-FOLDS = config.get('data-prepocess', 'folds')
+FOLDS = int(config.get('data-prepocess', 'folds'))
 
 
 

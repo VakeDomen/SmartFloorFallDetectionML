@@ -14,7 +14,7 @@ import configparser
 
 config = configparser.ConfigParser()
 config.read('../../config.ini')
-FOLDS = config.get('data-prepocess', 'folds')
+FOLDS = int(config.get('data-prepocess', 'folds'))
 
 def transformer_model(hidden_size, num_layers, num_heads, dropout_rate):
     inputs = keras.Input(shape=(300, 16))
