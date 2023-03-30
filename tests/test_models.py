@@ -9,6 +9,7 @@ from catboost import CatBoostClassifier
 from tensorflow.keras.backend import manual_variable_initialization 
 manual_variable_initialization(True)
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 FOLDS = 5 
 
@@ -49,13 +50,13 @@ print("\tDone!")
 print("Loading transformer models...")
 models_transf = []
 for i in tqdm(range(FOLDS)):
-    models_transf(keras.models.load_model(f"../models/Transformer/f{i}_Transformer.h5"))
+    models_transf.append(keras.models.load_model(f"../models/Transformer/f{i}_Transformer.h5"))
 print("\tDone!")
 
 print("Loading CatBoost models...")
 models_cb = []
 for i in tqdm(range(FOLDS)):
-    models_cb.append(CatBoostClassifier().load_model("../models/CatBoostModel.cmb"))
+    models_cb.append(CatBoostClassifier().load_model(f"../models/CatBoost/f{i}_CatBoost.cbm"))
 print("\tDone!")
 
 
@@ -64,19 +65,19 @@ print("\tDone!")
 print("\nPredicting probabilities for ROC AUC...")
 y_pred_ht = []
 for i in tqdm(range(FOLDS)):
-    y_pred_ht.append(model_hoef_tree.predict_proba(X_test_flat))
+    y_pred_ht.append(models_hoef[i].predict_proba(X_flat[i]))
 print("\tROC AUC Done! \t| HoeffdingTreeModel")
 y_pred_cnn = []
 for i in tqdm(range(FOLDS)):
-    y_pred_cnn.append(model_cnn.predict(X_test_deep))
+    y_pred_cnn.append(models_cnn[i].predict(X_deep[i]))
 print("\tROC AUC Done! \t| CNN")
 y_pred_transf = []
 for i in tqdm(range(FOLDS)):
-    y_pred_transf.append(model_transf.predict(X_test))
+    y_pred_transf.append(models_transf[i].predict(X[i]))
 print("\tROC AUC Done! \t| Transformer")
 y_pred_cb = []
 for i in tqdm(range(FOLDS)):
-    y_pred_cb.append(model_cb.predict_proba(X_test_flat))
+    y_pred_cb.append(models_cb[i].predict_proba(X_flat[i]))
 print("\tROC AUC Done! \t| CatBoost")
 
 print("\tDone!")
@@ -84,17 +85,17 @@ print("\tDone!")
 print("Calculating AUC ROC...")
 auc_ht = []
 for i in tqdm(range(FOLDS)):
-    auc_ht.append(roc_auc_score(Y_test, y_pred_ht[:,1]))
+    auc_ht.append(roc_auc_score(Y[i], y_pred_ht[i][:,1]))
 print(f"HoeffdingTree: \t{auc_ht}")
 auc_cnn = []
 for i in tqdm(range(FOLDS)):
-    auc_cnn.append(roc_auc_score(Y_test, y_pred_cnn))
+    auc_cnn.append(roc_auc_score(Y[i], y_pred_cnn[i]))
 print(f"CNN: \t\t{auc_cnn}")
 auc_transf = []
 for i in tqdm(range(FOLDS)):
-    auc_transf.append(roc_auc_score(Y_test, y_pred_transf))
+    auc_transf.append(roc_auc_score(Y[i], y_pred_transf[i]))
 print(f"Transformer: \t{auc_transf}")
 auc_cb = []
 for i in tqdm(range(FOLDS)):
-    auc_cb.append(roc_auc_score(Y_test, y_pred_cb[:,1]))
+    auc_cb.append(roc_auc_score(Y[i], y_pred_cb[i][:,1]))
 print(f"CatBoost: \t{auc_cb}")
