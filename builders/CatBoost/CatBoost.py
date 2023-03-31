@@ -9,18 +9,27 @@ import configparser
 
 config = configparser.ConfigParser()
 config.read('../../config.ini')
-FOLDS = int(config.get('data-prepocess', 'folds'))
+FOLDS           = int(config.get('data-preprocess', 'folds'))
+ITERATIONS      = int(config.get('models-cat-boost', 'iterations'))
+LEARNING_RATE   = float(config.get('models-cat-boost', 'learning_rate'))
+DEPTH           = int(config.get('models-cat-boost', 'depth'))
+L2_LEAF_REG     = int(config.get('models-cat-boost', 'l2_leaf_reg'))
+LOSS_FUNCTION   = config.get('models-cat-boost', 'loss_function')
+TASK_TYPE       = config.get('models-cat-boost', 'task_type')
+DEVICES         = config.get('models-cat-boost', 'devices')
+SEED            = int(config.get('general', 'random_seed'))
+
 
 def build_model():
     return cb.CatBoostClassifier(
-        iterations=1000,
-        learning_rate=0.1,
-        depth=6,
-        l2_leaf_reg=3,
-        loss_function='Logloss',
-        random_seed=42,
-        task_type='GPU',
-        devices='0:1'
+        iterations=ITERATIONS,
+        learning_rate=LEARNING_RATE,
+        depth=DEPTH,
+        l2_leaf_reg=L2_LEAF_REG,
+        loss_function=LOSS_FUNCTION,
+        random_seed=SEED,
+        task_type=TASK_TYPE,
+        devices=DEVICES
     )
 
 
