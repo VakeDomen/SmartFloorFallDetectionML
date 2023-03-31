@@ -11,11 +11,35 @@ import configparser
 
 config = configparser.ConfigParser()
 config.read('../../config.ini')
-FOLDS = int(config.get('data-prepocess', 'folds'))
+
+FOLDS                       = int(config.get('data-preprocess', 'folds'))
+MAX_BYTE_SIZE               = eval(config.get('model-hoeffding-tree', 'max_byte_size'))
+MEMORY_ESTIMATE_PERIOD      = eval(config.get('model-hoeffding-tree', 'memory_estimate_period'))
+GRACE_PERIOD                = eval(config.get('model-hoeffding-tree', 'grace_period'))
+SPLIT_CRITERION             = config.get('model-hoeffding-tree', 'split_criterion')
+SPLIT_CONFIDENCE            = eval(config.get('model-hoeffding-tree', 'split_confidence'))
+TIE_THRESHOLD               = eval(config.get('model-hoeffding-tree', 'tie_threshold'))
+STOP_MEM_MANAGEMENT         = bool(config.get('model-hoeffding-tree', 'stop_mem_management'))
+REMOVE_POOR_ATTS            = bool(config.get('model-hoeffding-tree', 'remove_poor_atts'))
+NO_PREPRUNE                 = bool(config.get('model-hoeffding-tree', 'no_preprune'))
+LEAF_PREDICTION             = config.get('model-hoeffding-tree', 'leaf_prediction')
+NB_THRESHOLD                = eval(config.get('model-hoeffding-tree', 'nb_threshold'))
 
 
 def build_model():
-    return HoeffdingTreeClassifier(leaf_prediction='mc', split_criterion='gini')
+    return HoeffdingTreeClassifier(
+            leaf_prediction=LEAF_PREDICTION, 
+            split_criterion=SPLIT_CRITERION,
+            max_byte_size=MAX_BYTE_SIZE,
+            memory_estimate_period=MEMORY_ESTIMATE_PERIOD,
+            grace_period=MEMORY_ESTIMATE_PERIOD,
+            split_confidence=SPLIT_CONFIDENCE,
+            tie_threshold=TIE_THRESHOLD,
+            stop_mem_management=STOP_MEM_MANAGEMENT,
+            remove_poor_atts=REMOVE_POOR_ATTS,
+            no_preprune=NO_PREPRUNE,
+            nb_threshold=NB_THRESHOLD            
+    )
 
 
 X = []
