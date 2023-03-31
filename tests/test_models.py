@@ -16,6 +16,31 @@ config = configparser.ConfigParser()
 config.read('../config.ini')
 FOLDS = int(config.get('data-preprocess', 'folds')) 
 
+def calc_roc_auc(y_tests, y_preds, model_name):
+    scores = []
+    for i in tqdm(range(FOLDS)):
+        score = roc_auc_score(y_tests[i], y_preds[i])
+        scores.append(score)
+        plt_roc_curve(y_tests[i], y_preds[i], score, f"auc_roc_{model_name}_f{i}")
+    tests = np.concatenate(y_tests)
+    preds =  np.concatenate(y_preds)
+    total_score = roc_auc_score(tests, preds)
+    scores.append(total_score)
+    plt_roc_curve(tests, preds, total_score, f"auc_roc_{model_name}")
+    return scores
+
+def plt_roc_curve_open(y_test, y_pred, score, fname):
+    fpr, tpr, _ = roc_curve(y_test,  y_pred)
+
+    #create ROC curve
+    plt.plot(fpr,tpr,label="AUC {fname}="+str(score))
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.legend(loc=4)
+
+def save_plot():
+    plt.savefig(f"../results/plots/auc_roc.png")
+    plt.close()
 
 def plt_roc_curve(y_test, y_pred, score, fname):
     fpr, tpr, _ = roc_curve(y_test,  y_pred)
@@ -25,7 +50,9 @@ def plt_roc_curve(y_test, y_pred, score, fname):
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.legend(loc=4)
-    plt.savefig(f'{fname}.png')
+    plt.savefig(f'../results/plots/{fname}.png')
+    plt.close()
+
 
 
 ####################### Setting up data ########################
@@ -77,10 +104,11 @@ print("\tDone!")
 
 ####################### Calculating ROC AUC ########################
 
+
 print("\nPredicting probabilities for ROC AUC...")
 y_pred_ht = []
 for i in tqdm(range(FOLDS)):
-    y_pred_ht.append(models_hoef[i].predict_proba(X_flat[i]))
+    y_pred_ht.append(models_hoef[i].predict_proba(X_flat[i])[:,1])
 print("\tROC AUC Done! \t| HoeffdingTreeModel")
 y_pred_cnn = []
 for i in tqdm(range(FOLDS)):
@@ -92,16 +120,28 @@ for i in tqdm(range(FOLDS)):
 print("\tROC AUC Done! \t| Transformer")
 y_pred_cb = []
 for i in tqdm(range(FOLDS)):
-    y_pred_cb.append(models_cb[i].predict_proba(X_flat[i]))
+    y_pred_cb.append(models_cb[i].predict_proba(X_flat[i])[:,1])
 print("\tROC AUC Done! \t| CatBoost")
 
 print("\tDone!")
 
 print("Calculating AUC ROC...")
-auc_ht = []
+score_ht        = calc_roc_auc(Y, y_pred_ht, "ht")
+score_cnn       = calc_roc_auc(Y, y_pred_cnn, "cnn")
+score_transf    = calc_roc_auc(Y, y_pred_transf, "transf")
+score_cb        = calc_roc_auc(Y, y_pred_cb, "cb")
+
+plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_ht), score_ht[-1], "ht")
+plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cnn), score_cnn[-1], "cnn")
+plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_transf), score_transf[-1], "transf")
+plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cb), score_cb[-1], "cb")
+save_plot()
+"""
+y_preds_ht = []
 for i in tqdm(range(FOLDS)):
-    auc_ht.append(roc_auc_score(Y[i], y_pred_ht[i][:,1]))
+    y_preds_ht.append(y_pred_ht[i][:,1]))
     plt_roc_curve(Y[i], y_pred_ht[i][:,1], auc_ht[i], f"auc_roc_hof_tree_f{i}")
+
 
 print(f"HoeffdingTree: \t{auc_ht}")
 auc_cnn = []
@@ -120,7 +160,10 @@ auc_cb = []
 for i in tqdm(range(FOLDS)):
     auc_cb.append(roc_auc_score(Y[i], y_pred_cb[i][:,1]))
     plt_roc_curve(Y[i], y_pred_cb[i][:,1], auc_cb[i], f"auc_roc_cb_f{i}")
-
-print(f"CatBoost: \t{auc_cb}")
+"""
+print(f"Hoeffding Tree: \t{score_ht}")
+print(f"CNN: \t{score_cnn}")
+print(f"Transformer: \t{score_transf}")
+print(f"CatBoost: \t{score_cb}")
 
 
