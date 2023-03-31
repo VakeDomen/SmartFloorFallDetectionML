@@ -6,12 +6,20 @@ import gc
 import pandas as pd
 import catboost as cb
 from sklearn.utils import shuffle
+import configparser
 
+config = configparser.ConfigParser()
+config.read('../config.ini')
 
+FOLDS               = int(config.get('data-preprocess', 'folds'))
+WINDOW_SIZE         = int(config.get('data-preprocess', 'window_size'))
+SEED                = int(config.get('general', 'random_seed'))
+SENSOR_UPPER_BOUND  = int(config.get('data', 'sensor_upper_bound'))
+SENSOR_LOWER_BOUND  = int(config.get('data', 'sensor_lower_bound'))
+POS_ID_COL          = config.get('data', 'positive_data_id_column'))
+NEG_ID_COL          = config.get('data', 'negative_data_id_column'))
 
-WINDOW_SIZE = 300
-FOLDS = 5
-np.random.seed(42)
+np.random.seed(SEED)
 
 
 def split_list(numbers, m):
@@ -26,9 +34,6 @@ def split_list(numbers, m):
             smallest_list.append(num)
     return sublists
 
-def diff(list1, list2):
-    li_dif = [i for i in list1 + list2 if i not in list1 or i not in list2]
-    return li_dif   
 
 def extract_windows(data, col, vals=[]):
   for val in data[col].unique():
@@ -39,7 +44,7 @@ def extract_windows(data, col, vals=[]):
     sample_data = sample_data.drop(columns=[col]).to_numpy()
     for window_offset in range(len(sample_data) - WINDOW_SIZE + 1):
       window = sample_data[ window_offset : window_offset + WINDOW_SIZE, : ]
-      yield window / 65537
+      yield (window - SENSOR_LOWER_BOUND) / (SENSOR_UPPER_BOUND - SENSOR_LOWER_BOUND)
 
 
 
@@ -55,16 +60,16 @@ positive_set = positive_set.drop(columns=["person_ID", "fall_category", "tick"])
 negative_set = negative_set.drop(columns=["neg_category", "person_ID", "tick"])
 
 print("Folding positive data...")
-positive_folds = split_list(positive_set["fall_ID"].unique(), FOLDS)
+positive_folds = split_list(positive_set[POS_ID_COL].unique(), FOLDS)
 
 print("Extracting data from the sets...")
-ndata = list(extract_windows(negative_set, "neg_ID"))
+ndata = list(extract_windows(negative_set, NEG_ID_COL))
 negative_folds = split_list([*range(len(ndata))], FOLDS)
 
 
 print("Balancing sets...")
 for i in tqdm(range(FOLDS)):
-    X_p = list(extract_windows(positive_set, "fall_ID", positive_folds[i]))
+    X_p = list(extract_windows(positive_set, POS_ID_COL, positive_folds[i]))
     X_n = [ndata[j] for j in negative_folds[i]]
 
     len_diff = len(X_p) - len(X_n)
@@ -96,7 +101,7 @@ for i in tqdm(range(FOLDS)):
 
 print("Shuffling data...")
 for i in tqdm(range(FOLDS)):
-    X[i], Y[i] = shuffle(X[i], Y[i], random_state=42)
+    X[i], Y[i] = shuffle(X[i], Y[i], random_state=SEED)
 
 print("Saving data...")
 for i in tqdm(range(FOLDS)):
