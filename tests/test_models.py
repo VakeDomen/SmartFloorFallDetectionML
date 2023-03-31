@@ -10,8 +10,23 @@ from tensorflow.keras.backend import manual_variable_initialization
 manual_variable_initialization(True)
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import configparser
 
-FOLDS = 5 
+config = configparser.ConfigParser()
+config.read('../config.ini')
+FOLDS = int(config.get('data-preprocess', 'folds')) 
+
+
+def plt_roc_curve(y_test, y_pred, score, fname):
+    fpr, tpr, _ = roc_curve(y_test,  y_pred)
+
+    #create ROC curve
+    plt.plot(fpr,tpr,label="AUC="+str(score))
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.legend(loc=4)
+    plt.savefig(f'{fname}.png')
+
 
 ####################### Setting up data ########################
 print("Loading test data...")
@@ -86,16 +101,26 @@ print("Calculating AUC ROC...")
 auc_ht = []
 for i in tqdm(range(FOLDS)):
     auc_ht.append(roc_auc_score(Y[i], y_pred_ht[i][:,1]))
+    plt_roc_curve(Y[i], y_pred_ht[i][:,1], auc_ht[i], f"auc_roc_hof_tree_f{i}")
+
 print(f"HoeffdingTree: \t{auc_ht}")
 auc_cnn = []
 for i in tqdm(range(FOLDS)):
     auc_cnn.append(roc_auc_score(Y[i], y_pred_cnn[i]))
+    plt_roc_curve(Y[i], y_pred_cnn[i], auc_cnn[i], f"auc_roc_cnn_f{i}")
+
 print(f"CNN: \t\t{auc_cnn}")
 auc_transf = []
 for i in tqdm(range(FOLDS)):
     auc_transf.append(roc_auc_score(Y[i], y_pred_transf[i]))
+    plt_roc_curve(Y[i], y_pred_transf[i], auc_transf[i], f"auc_roc_transf_f{i}")
+
 print(f"Transformer: \t{auc_transf}")
 auc_cb = []
 for i in tqdm(range(FOLDS)):
     auc_cb.append(roc_auc_score(Y[i], y_pred_cb[i][:,1]))
+    plt_roc_curve(Y[i], y_pred_cb[i][:,1], auc_cb[i], f"auc_roc_cb_f{i}")
+
 print(f"CatBoost: \t{auc_cb}")
+
+
