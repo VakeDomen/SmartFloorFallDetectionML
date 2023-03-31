@@ -33,7 +33,7 @@ def plt_roc_curve_open(y_test, y_pred, score, fname):
     fpr, tpr, _ = roc_curve(y_test,  y_pred)
 
     #create ROC curve
-    plt.plot(fpr,tpr,label="AUC {fname}="+str(score))
+    plt.plot(fpr,tpr,label=f"AUC {fname}="+str(score))
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.legend(loc=4)
