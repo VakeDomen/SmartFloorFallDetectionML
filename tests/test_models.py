@@ -14,7 +14,12 @@ import configparser
 
 config = configparser.ConfigParser()
 config.read('../config.ini')
-FOLDS = int(config.get('data-preprocess', 'folds')) 
+FOLDS               = int(config.get('data-preprocess', 'folds')) 
+TEST_CAT_BOOST      = int(config.get('models', 'cat_boost'))
+TEST_CNN            = int(config.get('models', 'CNN'))
+TEST_TRANSFORMER    = int(config.get('models', 'transformer'))
+TEST_HOEFTREE       = int(config.get('models', 'hoeffding_tree'))
+
 
 def calc_roc_auc(y_tests, y_preds, model_name):
     scores = []
@@ -53,6 +58,10 @@ def plt_roc_curve(y_test, y_pred, score, fname):
     plt.savefig(f'../results/plots/{fname}.png')
     plt.close()
 
+def auc_roc(Y_test, Y_pred, name):
+    score = calc_roc_auc(Y_test, y_pred, name)
+    plt_roc_curve_open(np.concatenate(Y_test), np.concatenate(y_pred), score[-1], name)
+    return score
 
 
 ####################### Setting up data ########################
@@ -75,57 +84,82 @@ for i in tqdm(range(FOLDS)):
 print("\tDone!")
 
 ####################### Loading models ########################
+if TEST_HOEFTREE == 1:
+    print("Loading HoeffdingTree models...")
+    models_hoef = []
+    for i in tqdm(range(FOLDS)):
+        with open(f'../models/HoeffdingTree/f{i}_HoeffdingTree.pickle', 'rb') as handle:
+            models_hoef.append(pickle.load(handle))
+    print("\tDone!")
 
-print("Loading HoeffdingTree models...")
-models_hoef = []
-for i in tqdm(range(FOLDS)):
-    with open(f'../models/HoeffdingTree/f{i}_HoeffdingTree.pickle', 'rb') as handle:
-        models_hoef.append(pickle.load(handle))
-print("\tDone!")
+if TEST_CNN == 1:
+    print("Loading CNN models...")
+    models_cnn = []
+    for i in tqdm(range(FOLDS)):
+        models_cnn.append(keras.models.load_model(f'../models/CNN/f{i}_CNN.h5'))
+    print("\tDone!")
 
-print("Loading CNN models...")
-models_cnn = []
-for i in tqdm(range(FOLDS)):
-    models_cnn.append(keras.models.load_model(f'../models/CNN/f{i}_CNN.h5'))
-print("\tDone!")
+if TEST_TRANSFORMER == 1:
+    print("Loading transformer models...")
+    models_transf = []
+    for i in tqdm(range(FOLDS)):
+        models_transf.append(keras.models.load_model(f"../models/Transformer/f{i}_Transformer.h5"))
+    print("\tDone!")
 
-print("Loading transformer models...")
-models_transf = []
-for i in tqdm(range(FOLDS)):
-    models_transf.append(keras.models.load_model(f"../models/Transformer/f{i}_Transformer.h5"))
-print("\tDone!")
-
-print("Loading CatBoost models...")
-models_cb = []
-for i in tqdm(range(FOLDS)):
-    models_cb.append(CatBoostClassifier().load_model(f"../models/CatBoost/f{i}_CatBoost.cbm"))
-print("\tDone!")
+if TEST_CAT_BOOST == 1:
+    print("Loading CatBoost models...")
+    models_cb = []
+    for i in tqdm(range(FOLDS)):
+        models_cb.append(CatBoostClassifier().load_model(f"../models/CatBoost/f{i}_CatBoost.cbm"))
+    print("\tDone!")
 
 
 ####################### Calculating ROC AUC ########################
 
-
 print("\nPredicting probabilities for ROC AUC...")
-y_pred_ht = []
-for i in tqdm(range(FOLDS)):
-    y_pred_ht.append(models_hoef[i].predict_proba(X_flat[i])[:,1])
-print("\tROC AUC Done! \t| HoeffdingTreeModel")
-y_pred_cnn = []
-for i in tqdm(range(FOLDS)):
-    y_pred_cnn.append(models_cnn[i].predict(X_deep[i]))
-print("\tROC AUC Done! \t| CNN")
-y_pred_transf = []
-for i in tqdm(range(FOLDS)):
-    y_pred_transf.append(models_transf[i].predict(X[i]))
-print("\tROC AUC Done! \t| Transformer")
-y_pred_cb = []
-for i in tqdm(range(FOLDS)):
-    y_pred_cb.append(models_cb[i].predict_proba(X_flat[i])[:,1])
-print("\tROC AUC Done! \t| CatBoost")
+
+if TEST_HOEFTREE == 1:
+    y_pred_ht = []
+    for i in tqdm(range(FOLDS)):
+        y_pred_ht.append(models_hoef[i].predict_proba(X_flat[i])[:,1])
+    print("\tROC AUC Done! \t| HoeffdingTreeModel")
+
+if TEST_CNN == 1:
+    y_pred_cnn = []
+    for i in tqdm(range(FOLDS)):
+        y_pred_cnn.append(models_cnn[i].predict(X_deep[i]))
+    print("\tROC AUC Done! \t| CNN")
+
+if TEST_TRANSFORMER == 1:
+    y_pred_transf = []
+    for i in tqdm(range(FOLDS)):
+        y_pred_transf.append(models_transf[i].predict(X[i]))
+    print("\tROC AUC Done! \t| Transformer")
+
+if TEST_CAT_BOOST == 1:
+    y_pred_cb = []
+    for i in tqdm(range(FOLDS)):
+        y_pred_cb.append(models_cb[i].predict_proba(X_flat[i])[:,1])
+    print("\tROC AUC Done! \t| CatBoost")
 
 print("\tDone!")
 
+
 print("Calculating AUC ROC...")
+if TEST_HOEFTREE == 1:
+    score_ht = roc_auc(Y, y_pred_ht, "ht")
+
+if TEST_CNN == 1:
+    score_cnn = roc_auc(Y, y_pred_cnn, "cnn")
+
+if TEST_TRANSFORMER == 1:
+    score_transf = roc_auc(Y, y_pred_transf, "transf")
+
+if TEST_CAT_BOOST == 1:
+    score_cb = roc_auc(Y, y_pred_cb, "cb")
+
+
+"""
 score_ht        = calc_roc_auc(Y, y_pred_ht, "ht")
 score_cnn       = calc_roc_auc(Y, y_pred_cnn, "cnn")
 score_transf    = calc_roc_auc(Y, y_pred_transf, "transf")
@@ -137,33 +171,16 @@ plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_transf), score_trans
 plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cb), score_cb[-1], "cb")
 save_plot()
 """
-y_preds_ht = []
-for i in tqdm(range(FOLDS)):
-    y_preds_ht.append(y_pred_ht[i][:,1]))
-    plt_roc_curve(Y[i], y_pred_ht[i][:,1], auc_ht[i], f"auc_roc_hof_tree_f{i}")
+if TEST_HOEFTREE == 1:
+    print(f"Hoeffding Tree: \t{score_ht}")
 
+if TEST_CNN == 1:
+    print(f"CNN: \t{score_cnn}")
 
-print(f"HoeffdingTree: \t{auc_ht}")
-auc_cnn = []
-for i in tqdm(range(FOLDS)):
-    auc_cnn.append(roc_auc_score(Y[i], y_pred_cnn[i]))
-    plt_roc_curve(Y[i], y_pred_cnn[i], auc_cnn[i], f"auc_roc_cnn_f{i}")
+if TEST_TRANSFORMER == 1:
+    print(f"Transformer: \t{score_transf}")
 
-print(f"CNN: \t\t{auc_cnn}")
-auc_transf = []
-for i in tqdm(range(FOLDS)):
-    auc_transf.append(roc_auc_score(Y[i], y_pred_transf[i]))
-    plt_roc_curve(Y[i], y_pred_transf[i], auc_transf[i], f"auc_roc_transf_f{i}")
-
-print(f"Transformer: \t{auc_transf}")
-auc_cb = []
-for i in tqdm(range(FOLDS)):
-    auc_cb.append(roc_auc_score(Y[i], y_pred_cb[i][:,1]))
-    plt_roc_curve(Y[i], y_pred_cb[i][:,1], auc_cb[i], f"auc_roc_cb_f{i}")
-"""
-print(f"Hoeffding Tree: \t{score_ht}")
-print(f"CNN: \t{score_cnn}")
-print(f"Transformer: \t{score_transf}")
-print(f"CatBoost: \t{score_cb}")
+if TEST_CAT_BOOST == 1:
+    print(f"CatBoost: \t{score_cb}")
 
 
