@@ -9,12 +9,6 @@ from sklearn.utils import shuffle
 import configparser
 import csv
 
-# Read matrix from file
-sensors = []
-with open('../floor.csv', 'r', encoding='utf-8') as csvfile:
-    reader = csv.reader(csvfile)
-    sensors = [row for row in reader]
-
 config = configparser.ConfigParser()
 config.read('../config.ini')
 
@@ -23,12 +17,19 @@ WINDOW_SIZE         = int(config.get('data-preprocess', 'window_size'))
 SEED                = int(config.get('general', 'random_seed'))
 SENSOR_UPPER_BOUND  = int(config.get('data', 'sensor_upper_bound'))
 SENSOR_LOWER_BOUND  = int(config.get('data', 'sensor_lower_bound'))
+SESNSORS_FILE       = config.get('data', 'sensor_matrix')
 DATA_FILE_NAME      = config.get('data', 'data_file_name')
 GROUP_COL           = config.get('data', 'group_col')
 PREDICT_COL         = config.get('data', 'predict_col')
 
 
 np.random.seed(SEED)
+
+def load_sensor_matrix():
+    with open('../floor.csv', 'r', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        return [row for row in reader]
+
 
 def strip_table(data, needed_cols):
     # Get the intersection of the column names in the DataFrame and the needed columns
@@ -74,6 +75,7 @@ def get_unique_strings(matrix):
 
 print("Loading raw data...")
 data_set = pd.read_csv(DATA_FILE_NAME)
+sensors = load_sensor_matrix()
 cols_to_keep = get_unique_strings(sensors)
 cols_to_keep.append(GROUP_COL)
 cols_to_keep.append(PREDICT_COL)

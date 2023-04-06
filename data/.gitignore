@@ -4,4 +4,5 @@ Y_test.npy
 Y_train.npy
 negativeSet.csv
 positiveSet.csv
+dataset_smartfloor.csv
 folds/*
