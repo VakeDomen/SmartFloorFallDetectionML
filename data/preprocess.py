@@ -7,6 +7,13 @@ import pandas as pd
 import catboost as cb
 from sklearn.utils import shuffle
 import configparser
+import csv
+
+# Read matrix from file
+sensors = []
+with open('../floor.csv', 'r', encoding='utf-8') as csvfile:
+    reader = csv.reader(csvfile)
+    sensors = [row for row in reader]
 
 config = configparser.ConfigParser()
 config.read('../config.ini')
@@ -23,6 +30,11 @@ PREDICT_COL         = config.get('data', 'predict_col')
 
 np.random.seed(SEED)
 
+def strip_table(data, needed_cols):
+    # Get the intersection of the column names in the DataFrame and the needed columns
+    cols_to_keep = list(set(data.columns) & set(needed_cols))
+    # Return a new DataFrame with only the selected columns
+    return data[cols_to_keep]
 
 def split_list(numbers, m):
     # Shuffle the list randomly
@@ -48,10 +60,24 @@ def extract_windows(data, col, vals=[]):
       window = sample_data[ window_offset : window_offset + WINDOW_SIZE, : ]
       yield (window - SENSOR_LOWER_BOUND) / (SENSOR_UPPER_BOUND - SENSOR_LOWER_BOUND)
 
+def get_unique_strings(matrix):
+    # Create a set to store unique strings
+    unique_strings = set()
+    # Iterate over each element in the matrix
+    for row in matrix:
+        for string in row:
+            # Add each string to the set
+            unique_strings.add(string)    
+    # Convert the set to a list and return it
+    return list(unique_strings)
 
 
 print("Loading raw data...")
 data_set = pd.read_csv(DATA_FILE_NAME)
+cols_to_keep = get_unique_strings(sensors)
+cols_to_keep.append(GROUP_COL)
+cols_to_keep.append(PREDICT_COL)
+data_set = strip_table(data_set, cols_to_keep) 
 
 print("Splitting data by prediction label...")
 labels = data_set[PREDICT_COL].unique()
