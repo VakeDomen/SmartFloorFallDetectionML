@@ -58,9 +58,9 @@ def plt_roc_curve(y_test, y_pred, score, fname):
     plt.savefig(f'../results/plots/{fname}.png')
     plt.close()
 
-def auc_roc(Y_test, Y_pred, name):
-    score = calc_roc_auc(Y_test, y_pred, name)
-    plt_roc_curve_open(np.concatenate(Y_test), np.concatenate(y_pred), score[-1], name)
+def roc_auc(Y_test, Y_pred, name):
+    score = calc_roc_auc(Y_test, Y_pred, name)
+    plt_roc_curve_open(np.concatenate(Y_test), np.concatenate(Y_pred), score[-1], name)
     return score
 
 
