@@ -58,5 +58,5 @@ for i in range(FOLDS):
     model.fit(X_train, Y_train, verbose=True)
     print("Saving model...")
     model.save_model(f"../../models/CatBoost/f{i}_CatBoost.cbm", format="cbm")
-    ic.collect()
+    gc.collect()
 print("Done!")
