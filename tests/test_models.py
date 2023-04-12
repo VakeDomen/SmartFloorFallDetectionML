@@ -36,7 +36,7 @@ def calc_roc_auc(y_tests, y_preds, model_name):
 
 def plt_roc_curve_open(y_test, y_pred, score, fname):
     fpr, tpr, _ = roc_curve(y_test,  y_pred)
-
+    plt.figure(2)
     #create ROC curve
     plt.plot(fpr,tpr,label=f"AUC {fname}="+str(score))
     plt.ylabel('True Positive Rate')
@@ -44,12 +44,13 @@ def plt_roc_curve_open(y_test, y_pred, score, fname):
     plt.legend(loc=4)
 
 def save_plot():
+    plt.figure(2)
     plt.savefig(f"../results/plots/auc_roc.png")
     plt.close()
 
 def plt_roc_curve(y_test, y_pred, score, fname):
     fpr, tpr, _ = roc_curve(y_test,  y_pred)
-
+    plt.figure(1)
     #create ROC curve
     plt.plot(fpr,tpr,label="AUC="+str(score))
     plt.ylabel('True Positive Rate')
@@ -148,16 +149,18 @@ print("\tDone!")
 print("Calculating AUC ROC...")
 if TEST_HOEFTREE == 1:
     score_ht = roc_auc(Y, y_pred_ht, "ht")
-
+    plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_ht), score_ht[-1], "ht")
 if TEST_CNN == 1:
     score_cnn = roc_auc(Y, y_pred_cnn, "cnn")
-
+    plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cnn), score_cnn[-1], "cnn")
 if TEST_TRANSFORMER == 1:
     score_transf = roc_auc(Y, y_pred_transf, "transf")
-
+    plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_transf), score_transf[-1], "transf")
 if TEST_CAT_BOOST == 1:
     score_cb = roc_auc(Y, y_pred_cb, "cb")
+    plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cb), score_cb[-1], "cb")
 
+save_plot()
 
 """
 score_ht        = calc_roc_auc(Y, y_pred_ht, "ht")
