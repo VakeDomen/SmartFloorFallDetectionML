@@ -149,16 +149,16 @@ print("\tDone!")
 print("Calculating AUC ROC...")
 if TEST_HOEFTREE == 1:
     score_ht = roc_auc(Y, y_pred_ht, "ht")
-    plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_ht), score_ht[-1], "ht")
+    #plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_ht), score_ht[-1], "ht")
 if TEST_CNN == 1:
     score_cnn = roc_auc(Y, y_pred_cnn, "cnn")
-    plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cnn), score_cnn[-1], "cnn")
+    #plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cnn), score_cnn[-1], "cnn")
 if TEST_TRANSFORMER == 1:
     score_transf = roc_auc(Y, y_pred_transf, "transf")
-    plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_transf), score_transf[-1], "transf")
+    #plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_transf), score_transf[-1], "transf")
 if TEST_CAT_BOOST == 1:
     score_cb = roc_auc(Y, y_pred_cb, "cb")
-    plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cb), score_cb[-1], "cb")
+    #plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cb), score_cb[-1], "cb")
 
 save_plot()
 
