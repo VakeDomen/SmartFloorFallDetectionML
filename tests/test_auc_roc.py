@@ -1,6 +1,6 @@
 
 """
-test_auc_roc.sh
+test_auc_roc.py
 -----------
 
 This script calculates the ROC AUC scores for the trained models and generates
