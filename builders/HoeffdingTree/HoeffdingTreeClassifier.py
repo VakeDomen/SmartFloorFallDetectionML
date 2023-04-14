@@ -1,7 +1,35 @@
+# HoeffdingTreeClassifier.py
+# ----------
+# This script trains a HoeffdingTree classifier on preprocessed data and saves the
+# resulting model for each fold. The model's parameters are read from a
+# config.ini file.
+#
+# Author: Domen Vake
+#
+# MIT License
+# Copyright (c) 2023 Domen Vake
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+
 import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from skmultiflow.data import RegressionGenerator
 from skmultiflow.trees import HoeffdingTreeClassifier
 from tqdm import tqdm
 import pickle
@@ -9,6 +37,7 @@ import gc
 from tqdm import tqdm
 import configparser
 
+# Read model configuration from the config.ini file
 config = configparser.ConfigParser()
 config.read('../../config.ini')
 
@@ -26,7 +55,7 @@ LEAF_PREDICTION             = config.get('model-hoeffding-tree', 'leaf_predictio
 NB_THRESHOLD                = eval(config.get('model-hoeffding-tree', 'nb_threshold'))
 BATCH_SIZE                  = int(config.get('model-hoeffding-tree', 'batch_size'))
 
-
+# Function to build a CatBoost classifier model with the given configuration
 def build_model():
     return HoeffdingTreeClassifier(
             leaf_prediction=LEAF_PREDICTION, 
@@ -37,24 +66,27 @@ def build_model():
             split_confidence=SPLIT_CONFIDENCE,
             tie_threshold=TIE_THRESHOLD,
             stop_mem_management=STOP_MEM_MANAGEMENT,
-            #remove_poor_atts=REMOVE_POOR_ATTS,
             no_preprune=NO_PREPRUNE,
             nb_threshold=NB_THRESHOLD            
     )
 
 
+# Load the preprocessed data for each fold
 X = []
 Y = []
 print("Loading data...")
 for i in tqdm(range(FOLDS)):
     X.append(np.load(f"../../data/folds/X{i}.npy"))
     Y.append(np.load(f"../../data/folds/Y{i}.npy"))
-       
+
+
+# Reshape the data by combining the last two dimensions   
 print("Reshaping data...")
 for i in tqdm(range(len(X))):
     X[i] = X[i].reshape(*X[i].shape[:-2], -1)
 
 
+# Train a model for each fold and save the resulting model
 print("Fitting models...")
 for i in range(FOLDS):
     print(f"Building model {i+1}...")
@@ -65,11 +97,6 @@ for i in range(FOLDS):
     y_pred = np.empty(len(X_train))
     
     print(f"Fitting model {i+1}/{FOLDS}")
-    """        
-    for index in tqdm(range(len(X_train))):
-        y_pred[index] = model.predict([X_train[index]])[0]
-        model.partial_fit([X_train[index]], [Y_train[index]])
-    """
     num_batches = len(X_train) // BATCH_SIZE
     for batch_idx in tqdm(range(num_batches)):
         batch_start = batch_idx * BATCH_SIZE
