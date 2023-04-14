@@ -1,17 +1,45 @@
+# Transformer.py
+# ----------
+# This script trains a Transformer classifier on preprocessed data and saves the
+# resulting model for each fold. The model's parameters are read from a
+# config.ini file.
+#
+# Author: Domen Vake
+#
+# MIT License
+# Copyright (c) 2023 Domen Vake
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import numpy as np
-import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-from sklearn.model_selection import train_test_split
 from tensorflow.keras.backend import manual_variable_initialization 
-manual_variable_initialization(True)
 from tqdm import tqdm
 import gc
 import configparser
 
+# Read model configuration from the config.ini file
 config = configparser.ConfigParser()
 config.read('../../config.ini')
 
@@ -27,21 +55,13 @@ EPOCHS                  = eval(config.get('model-transformer', 'epochs'))
 METRICS                 = eval(config.get('model-transformer', 'metrics'))
 WINDOW_SIZE             = eval(config.get('data-preprocess', 'window_size'))
 SENSORS_KERNEL_SHAPE    = eval(config.get('data', 'shape_kernel'))
+SEED                    = int(config.get('general', 'random_seed'))
 
-"""
-[model-transformer]
-hidden_size = 128
-num_layers = 2
-num_heads = 4
-encoder_layer_activation=relu
-dropout_rate = 0.2
-batch_size = 32
-learning_rate = 1e-4
-num_epochs = 10
-metrics=["accuracy"]
-"""
+# Set random seeds for reproducibility
+manual_variable_initialization(True)
+tf.random.set_seed(SEED)
 
-
+# Function to build a CatBoost classifier model with the given configuration
 def build_model():
     inputs = keras.Input(shape=(WINDOW_SIZE, SENSORS_KERNEL_SHAPE[0] * SENSORS_KERNEL_SHAPE[1]))
 
@@ -58,33 +78,21 @@ def build_model():
 
     # Take the mean of the output features along the time axis
     x = layers.GlobalAveragePooling1D()(x)
-
     # Add the output layer
     outputs = layers.Dense(1, activation="sigmoid")(x)
-
     model = keras.Model(inputs=inputs, outputs=outputs)
-
     return model
 
+# Load the preprocessed data for each fold
 X = []
 Y = []
 print("Loading data...")
 for i in tqdm(range(FOLDS)):
     X.append(np.load(f"../../data/folds/X{i}.npy"))
     Y.append(np.load(f"../../data/folds/Y{i}.npy"))
-       
-"""
-# Define the hyperparameters
-hidden_size = 128
-num_layers = 2
-num_heads = 4
-dropout_rate = 0.2
-batch_size = 32
-learning_rate = 1e-4
-num_epochs = 10
-"""
 
 
+# Train a model for each fold and save the resulting model
 for i in range(FOLDS):
     print(f"Building model {i+1}...")
     model = build_model()
@@ -93,7 +101,7 @@ for i in range(FOLDS):
     Y_train = np.concatenate((Y[:i] + Y[i+1:]))
         
     train_dataset = tf.data.Dataset.from_tensor_slices((X_train, Y_train))
-    train_dataset = train_dataset.batch(BATCH_SIZE).shuffle(10000)
+    train_dataset = train_dataset.batch(BATCH_SIZE).shuffle(10000, seed=SEED)
 
     # Define the loss function and optimizer
     loss_fn = keras.losses.MeanSquaredError()
@@ -103,11 +111,9 @@ for i in range(FOLDS):
     # Compile the model
     model.compile(optimizer=optimizer, loss=loss_fn, metrics=METRICS)
 
-
     print(f"Fitting model {i+1}/{FOLDS}")
     # Train the model
     model.fit(train_dataset, epochs=EPOCHS, verbose=1)
-
     model.save(f"../../models/Transformer/f{i}_Transformer.h5")
     gc.collect()
 
