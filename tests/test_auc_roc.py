@@ -1,3 +1,36 @@
+
+"""
+test_auc_roc.sh
+-----------
+
+This script calculates the ROC AUC scores for the trained models and generates
+ROC curve plots for each fold and for the total dataset.
+
+
+MIT License
+Copyright (c) 2023 Domen Vake
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+"""
+
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import pickle
@@ -121,27 +154,27 @@ print("\nPredicting probabilities for ROC AUC...")
 
 if TEST_HOEFTREE == 1:
     y_pred_ht = []
+    print("\tHoeffdingTreeModel")
     for i in tqdm(range(FOLDS)):
         y_pred_ht.append(models_hoef[i].predict_proba(X_flat[i])[:,1])
-    print("\tROC AUC Done! \t| HoeffdingTreeModel")
 
 if TEST_CNN == 1:
     y_pred_cnn = []
+    print("\tCNN")
     for i in tqdm(range(FOLDS)):
         y_pred_cnn.append(models_cnn[i].predict(X_deep[i]))
-    print("\tROC AUC Done! \t| CNN")
 
 if TEST_TRANSFORMER == 1:
     y_pred_transf = []
+    print("\tTransformer")
     for i in tqdm(range(FOLDS)):
         y_pred_transf.append(models_transf[i].predict(X[i]))
-    print("\tROC AUC Done! \t| Transformer")
 
 if TEST_CAT_BOOST == 1:
     y_pred_cb = []
+    print("\tCatBoost")
     for i in tqdm(range(FOLDS)):
         y_pred_cb.append(models_cb[i].predict_proba(X_flat[i])[:,1])
-    print("\tROC AUC Done! \t| CatBoost")
 
 print("\tDone!")
 
@@ -149,40 +182,21 @@ print("\tDone!")
 print("Calculating AUC ROC...")
 if TEST_HOEFTREE == 1:
     score_ht = roc_auc(Y, y_pred_ht, "ht")
-    #plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_ht), score_ht[-1], "ht")
 if TEST_CNN == 1:
     score_cnn = roc_auc(Y, y_pred_cnn, "cnn")
-    #plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cnn), score_cnn[-1], "cnn")
 if TEST_TRANSFORMER == 1:
     score_transf = roc_auc(Y, y_pred_transf, "transf")
-    #plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_transf), score_transf[-1], "transf")
 if TEST_CAT_BOOST == 1:
     score_cb = roc_auc(Y, y_pred_cb, "cb")
-    #plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cb), score_cb[-1], "cb")
 
 save_plot()
 
-"""
-score_ht        = calc_roc_auc(Y, y_pred_ht, "ht")
-score_cnn       = calc_roc_auc(Y, y_pred_cnn, "cnn")
-score_transf    = calc_roc_auc(Y, y_pred_transf, "transf")
-score_cb        = calc_roc_auc(Y, y_pred_cb, "cb")
-
-plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_ht), score_ht[-1], "ht")
-plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cnn), score_cnn[-1], "cnn")
-plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_transf), score_transf[-1], "transf")
-plt_roc_curve_open(np.concatenate(Y), np.concatenate(y_pred_cb), score_cb[-1], "cb")
-save_plot()
-"""
 if TEST_HOEFTREE == 1:
     print(f"Hoeffding Tree: \t{score_ht}")
-
 if TEST_CNN == 1:
     print(f"CNN: \t{score_cnn}")
-
 if TEST_TRANSFORMER == 1:
     print(f"Transformer: \t{score_transf}")
-
 if TEST_CAT_BOOST == 1:
     print(f"CatBoost: \t{score_cb}")
 
