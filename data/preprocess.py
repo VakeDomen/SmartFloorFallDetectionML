@@ -1,14 +1,28 @@
-import math
+"""
+preprocessing.py
+----------------
+
+This script loads sensor data, preprocesses it, and saves the preprocessed data
+into separate folds. It performs the following steps:
+    1. Load raw data and sensor matrix
+    2. Split data by prediction label
+    3. Create folds for each label
+    4. Extract sliding windows of data from each fold
+    5. Balance the number of samples in each set
+    6. Shuffle and save the preprocessed data
+
+"""
+
 import random
 import numpy as np
 from tqdm import tqdm
 import pandas as pd
-import catboost as cb
 from sklearn.utils import shuffle
 import configparser
 import csv
-import os
 
+
+# Load configurations
 config = configparser.ConfigParser()
 config.read('../config.ini')
 
@@ -24,18 +38,24 @@ PREDICT_COL         = config.get('data', 'predict_col')
 KERNEL              = eval(config.get('data', 'shape_kernel'))
 
 
+# Set random seeds for reproducibility
 np.random.seed(SEED)
 random.seed(SEED)
 
+
+# Function to load sensor matrix from a CSV file
 def load_sensor_matrix():
     with open(f'../{SENSORS_FILE}', 'r', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         return [row for row in reader]
 
 
+# Function to keep only needed columns in the data
 def strip_table(data, needed_cols):
     return data.filter(items=needed_cols)
 
+
+# Function to split a list into 'm' random sublists of equal size
 def split_list(numbers, m):
     random.shuffle(numbers)
     sublists = [[] for _ in range(m)]
@@ -45,6 +65,7 @@ def split_list(numbers, m):
     return sublists
 
 
+# Function to get kernel values for extracting sliding windows
 def get_kernel_values(matrix, kernel):
     n, m = len(matrix), len(matrix[0])
     kx, ky = kernel
@@ -60,9 +81,8 @@ def get_kernel_values(matrix, kernel):
                 yield values
 
 
+# Function to extract sliding windows of sensor data
 def extract_windows(data, filter_col, included_vals=[], sensor_matrix=[]):
-    data_array = data.to_numpy()  # Convert data to numpy array
-    n_rows, n_cols = data.shape
     kernel_values = get_kernel_values(sensor_matrix, KERNEL)
     for val in data[filter_col].unique():
         if len(included_vals) > 0:
@@ -78,13 +98,13 @@ def extract_windows(data, filter_col, included_vals=[], sensor_matrix=[]):
                 yield window
 
 
+# Function to get unique strings from a matrix
 def get_unique_strings(matrix):
-    # Create a set to store unique strings
     unique_strings = {string for row in matrix for string in row}
-    # Convert the set to a list and return it
     return list(unique_strings)
 
 
+# Load raw data
 print("Loading raw data...")
 data_set = pd.read_csv(DATA_FILE_NAME)
 sensors = np.array(load_sensor_matrix())
@@ -93,23 +113,27 @@ cols_to_keep.append(GROUP_COL)
 cols_to_keep.append(PREDICT_COL)
 data_set = strip_table(data_set, cols_to_keep) 
 
+# Split data by prediction label
 print("Splitting data by prediction label...")
 labels = data_set[PREDICT_COL].unique()
 data = [[] for _ in range(len(labels)) ]
 for i, lab in enumerate(labels):
     data[i] = data_set.loc[data_set[PREDICT_COL] == lab]
 
+# Fold the data for cross-validation
 print("Folding data...")
 folds = [[] for i in range(len(labels))]
 for i, lab in enumerate(labels):
     folds[i] = split_list(data[i][GROUP_COL].unique(), FOLDS)
 
+# Extract sliding windows from the sets
 print("Extracting data from the sets...")
 windowed_data = [[] for _ in range(len(labels))]
 for i, lab in enumerate(labels):
     for j in tqdm(range(FOLDS)):
         windowed_data[i].append(list(extract_windows(data_set, GROUP_COL, folds[i][j], sensors)))
 
+# Balance the number of samples in each set
 print("Balancing sets...")
 min_sample = min(len(windowed_data[i][j]) for i in range(len(labels)) for j in range(FOLDS))
 
@@ -132,10 +156,12 @@ for i in tqdm(range(FOLDS)):
     X.append(np.concatenate(X_fold))
     Y.append(np.concatenate(Y_fold))
 
+# Concatenate and shuffle the preprocessed data
 print("Shuffling data...")
 for i in tqdm(range(FOLDS)):
     X[i], Y[i] = shuffle(X[i], Y[i], random_state=SEED)
 
+# Save the preprocessed data
 print("Saving data...")
 for i in tqdm(range(FOLDS)):
     np.save(f"folds/X{i}.npy", X[i])
