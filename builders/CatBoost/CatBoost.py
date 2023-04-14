@@ -1,12 +1,40 @@
-import math
+# CatBoost.py
+# ----------
+# This script trains a CatBoost classifier on preprocessed data and saves the
+# resulting model for each fold. The model's parameters are read from a
+# config.ini file.
+#
+# Author: Domen Vake
+#
+# MIT License
+# Copyright (c) 2023 Domen Vake
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
 import numpy as np
 from tqdm import tqdm
 import gc
-import pandas as pd
-from sklearn.model_selection import train_test_split
 import catboost as cb
 import configparser
 
+# Read model configuration from the config.ini file
 config = configparser.ConfigParser()
 config.read('../../config.ini')
 FOLDS           = int(config.get('data-preprocess', 'folds'))
@@ -19,7 +47,7 @@ TASK_TYPE       = config.get('model-cat-boost', 'task_type')
 DEVICES         = config.get('model-cat-boost', 'devices')
 SEED            = int(config.get('general', 'random_seed'))
 
-
+# Function to build a CatBoost classifier model with the given configuration
 def build_model():
     return cb.CatBoostClassifier(
         iterations=ITERATIONS,
@@ -33,6 +61,7 @@ def build_model():
     )
 
 
+# Load the preprocessed data for each fold
 X = []
 Y = []
 print("Loading data...")
@@ -40,13 +69,14 @@ for i in tqdm(range(FOLDS)):
     X.append(np.load(f"../../data/folds/X{i}.npy"))
     Y.append(np.load(f"../../data/folds/Y{i}.npy"))
        
+
+# Reshape the data by combining the last two dimensions
 print("Reshaping data...")
 for i in tqdm(range(len(X))):
     X[i] = X[i].reshape(*X[i].shape[:-2], -1)
 
 
-print("Building model...")
-
+# Train a model for each fold and save the resulting model
 print("Fitting models...")
 for i in range(FOLDS):
     print(f"Building model {i + 1}...")
