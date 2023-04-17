@@ -5,13 +5,23 @@ The models employed in this project include Convolutional Neural Networks (CNNs)
 Hoeffding Trees. The performance of these models is evaluated using ROC AUC scores, F1 scores.
 
 ## Table of contents
-
+- [Structure](#structure)
+- [Setup](#setup)
+- [Usage](#usage)
+- [Modification](#modification)
+- [License](#license)
+- [Author](#author)
 
 ## Structure
 
-## Prerequisites
-1. Python 3.9
-2. Tensorflow
+Folder structure of the project:
+- `data`: contains data download and preprocess scripts
+- `builders`: contains scripts to build ML models on the preprocessed data
+- `models`: after building the models the built models are stored in this folder
+- `tests`: stores the testing scripts for the models
+- `results`: stores the outputs of the testing scripts, such as plots
+- `scripts`: contains the scripts to run different parts of the project workflow
+
 
 ## Setup
 
@@ -167,3 +177,10 @@ s4,s5,s6,s7
 s8,s9,s10,s11
 s12,s13,s14,s15
 ```
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for details.
+
+## Author
+
+Domen Vake - [GitHub](https://github.com/VakeDomen)
