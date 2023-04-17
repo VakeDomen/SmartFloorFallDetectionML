@@ -19,7 +19,8 @@ To train a model using one of the scripts, run the corresponding script from the
 Example:
 
 ```
-python3 CatBoostClassifier.py
+cd CatBoost
+python3 CatBoost.py
 ```
 
 This will train a CatBoost classifier on the preprocessed data using the parameters specified in the `config.ini` file.
