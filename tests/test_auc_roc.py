@@ -44,6 +44,8 @@ manual_variable_initialization(True)
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import configparser
+import csv
+
 
 config = configparser.ConfigParser()
 config.read('../config.ini')
@@ -199,5 +201,27 @@ if TEST_TRANSFORMER == 1:
     print(f"Transformer: \t{score_transf}")
 if TEST_CAT_BOOST == 1:
     print(f"CatBoost: \t{score_cb}")
+
+
+
+######################### Save results ############################
+# Create a directory if it doesn't exist
+os.makedirs("../results", exist_ok=True)
+
+# Write the results to a CSV file
+with open('../results/results.csv', 'w', newline='') as csvfile:
+    fieldnames = ['Model', 'ROC AUC Score']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+    writer.writeheader()
+    if TEST_HOEFTREE == 1:
+        writer.writerow({'Model': 'Hoeffding Tree', 'ROC AUC Score': score_ht})
+    if TEST_CNN == 1:
+        writer.writerow({'Model': 'CNN', 'ROC AUC Score': score_cnn})
+    if TEST_TRANSFORMER == 1:
+        writer.writerow({'Model': 'Transformer', 'ROC AUC Score': score_transf})
+    if TEST_CAT_BOOST == 1:
+        writer.writerow({'Model': 'CatBoost', 'ROC AUC Score': score_cb})
+
 
 

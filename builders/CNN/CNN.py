@@ -37,7 +37,6 @@ from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPool2D
 from tensorflow.keras.layers import Flatten
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.utils import set_random_seed
 from tqdm import tqdm
 import configparser
 
@@ -68,9 +67,6 @@ if not len(SHAPE_MAX_POOL) == 2:
 if not len(DENSE_LAYERS_UNITS) == len(DENSE_LAYERS_ACTIVATIONS):
     print("Lenth of DENSE_LAYERS_UNITS and DENSE_LAYERS_ACTIVATIONS should match")
     exit(1)
-
-# Set random seeds for reproducibility
-set_random_seed(SEED)
 
 # Function to build a CNN model with the given configuration
 def build_model():
