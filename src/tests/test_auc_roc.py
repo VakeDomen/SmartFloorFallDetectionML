@@ -209,7 +209,7 @@ if TEST_CAT_BOOST == 1:
 os.makedirs("../results", exist_ok=True)
 
 # Write the results to a CSV file
-with open('../results/results.csv', 'w', newline='') as csvfile:
+with open('../results/results_roc_auc.csv', 'w', newline='') as csvfile:
     fieldnames = ['Model', 'ROC AUC Score']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 

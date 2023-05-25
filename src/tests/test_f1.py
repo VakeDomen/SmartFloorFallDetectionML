@@ -41,6 +41,7 @@ manual_variable_initialization(True)
 from sklearn.metrics import f1_score
 from tqdm import tqdm
 import configparser
+import csv
 
 config = configparser.ConfigParser()
 config.read('../config.ini')
@@ -176,6 +177,26 @@ if TEST_TRANSFORMER == 1:
 if TEST_CAT_BOOST == 1:
     print(f"CatBoost F1-Scores: {f1_scores_cb}")
     print(f"Average F1-Score: {np.mean(f1_scores_cb)}")
+
+
+# Create a directory if it doesn't exist
+os.makedirs("../results", exist_ok=True)
+
+# Write the results to a CSV file
+with open('../results/results_f1.csv', 'w', newline='') as csvfile:
+    fieldnames = ['Model', 'F1 Score']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+    writer.writeheader()
+    if TEST_HOEFTREE == 1:
+        writer.writerow({'Model': 'Hoeffding Tree', 'F1 Score': f1_scores_hoef})
+    if TEST_CNN == 1:
+        writer.writerow({'Model': 'CNN', 'F1 Score': f1_scores_cnn})
+    if TEST_TRANSFORMER == 1:
+        writer.writerow({'Model': 'Transformer', 'F1 Score': f1_scores_transf})
+    if TEST_CAT_BOOST == 1:
+        writer.writerow({'Model': 'CatBoost', 'F1 Score': f1_scores_cb})
+
 
 print("\tDone!")
 
