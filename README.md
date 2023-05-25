@@ -39,43 +39,20 @@ pip install -r requirements.txt
 ## Usage
 
 The folder `scripts` contains multiple useful scripts that you might want to use in the project.
-First navigate to the folder:
+
+There are 3 important steps to complete prior to using the software. First you need to supply your data. See the [README](src/data/README.md) in the data folder.
+Second you may want to modify the `config.ini` to suit your needs (see more under [Modification](#modification)) and third you should describe your topology in a `.csv` file and reference it 
+in the `config.ini` file (reference file `floor.csv` is provided for you).
+
+Once you have completed the above tasks you may want to navigate the `scripts` folder:
 ```
 cd scripts
 ```
-- ### run_all.sh
 Run the entire pipeline, including data preprocessing, model training, and model evaluation.
 ```
 ./run_all.sh
 ```
-- ### clear_data.sh
-Remove the preprocessed data that might be stored in the `data` directory.
-```
-./clear_data.sh
-```
-- ### data_setup.sh
-Preprocess the raw data and create the necessary folds for cross-validation.
-```
-./data_setup.sh
-```
-- ### clear_models.sh
-Remove the trained models stored in the `models` directory.
-```
-./clear_models.sh
-```
-- ### build_models.sh
-Train all the models specified in the `config.ini` file. The trained models are stored in the `models` folder.
-```
-./build_models.sh
-```
-- ### clear_results.sh
-Remove the results stored in the `results` directory, including ROC AUC scores and plots.
-```
-./clear_results.sh
-```
-- ### test_models.sh
-Evaluate the trained models using the test data. This script will only test the models specified in the `config.ini`.
-
+There are more options for you, described in the [README](src/scripts/README.md) in the scripts folder.
 
 ## Modification
 
@@ -89,12 +66,12 @@ The config.ini file contains various sections and key-value pairs to configure t
 
 - [data]: Settings related to the raw data and its preprocessing.
 
-    - `sensor_upper_bound`: Upper bound for sensor values (default: 65537).
-    - `sensor_lower_bound`: Lower bound for sensor values (default: 0).
+    - `sensor_upper_bound`: Upper bound for sensor values - used for normalization (default: 65537).
+    - `sensor_lower_bound`: Lower bound for sensor values - used for normalization (default: 0).
     - `data_gdrive_id`: Google Drive ID for the raw data file.
     - `data_file_name`: Name of the raw data file (default: dataset_smartfloor.csv).
     - `sensor_matrix`: Name of the sensor matrix file (default: floor.csv).
-    - `group_col`: Name of the group column in the data (default: id).
+    - `group_col`: Name of the group column in the data - should respresent one time series sample (default: id).
     - `predict_col`: Name of the target prediction column in the data (default: class).
     - `shape_kernel`: Shape of the kernel for sensor data extraction window (default: (4, 4)).
 
@@ -149,15 +126,8 @@ The config.ini file contains various sections and key-value pairs to configure t
 - [model-hoeffding-tree]: Settings for the Hoeffding Tree model.
 
     - `max_byte_size`: Maximum memory consumed by the tree (default: 33554432).
-    - `memory_estimate_period`: Memory estimate period (default: 1000000).
-    - `grace_period`: Number of instances a leaf should observe between split attempts (default: 200).
     - `split_criterion`: Split criterion to use (default: info_gain).
-    - `split_confidence`: Split confidence (default: 1e-5).
-    - `tie_threshold`: Threshold below which a split will be forced to break ties (default: 0.05).
-    - `stop_mem_management`: Flag to stop memory management (default: 0).
-    - `no_preprune`: Flag to disable pre-pruning (default: 0).
     - `leaf_prediction`: Type of leaf prediction to use (default: mc).
-    - `nb_threshold`: Naive Bayes threshold (default: 0).
     - `batch_size`: Batch size for training (default: 100).
 
 Remember to adjust these parameters according to your dataset and requirements.
@@ -166,7 +136,7 @@ Remember to adjust these parameters according to your dataset and requirements.
 The `floor.csv` file contains the topological configuration of your sensors. Note that the name and the location of this file are selected arbitratily and can be changed in the `config.ini` under the `data`
 section under the `sensor_matrix` attribute.
 
-The function of this file is to tell the preprocessing scitpr how the sensors are structured topologically,
+The function of this file is to tell the preprocessing script how the sensors are structured topologically,
 such that the script can extract the data of the adjacent sensors and group the sensor data into windows.
 The sensors selected are calulcated in from the `shape_kernel` attribute. 
 
