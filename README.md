@@ -1,8 +1,6 @@
 # Time Series Classification: Smart Floor
 
-This project aims to classify time series data for planar sesnor networks using various machine learning models. 
-The models employed in this project include Convolutional Neural Networks (CNNs), Transformers, CatBoost, and 
-Hoeffding Trees. The performance of these models is evaluated using ROC AUC scores, F1 scores.
+The project is designed to quickly prototype multiple machine learning models to classify data for a given  grid-like sensor network. Developing an accurate and efficient machine learning (ML) model based on sensor data can be a time-consuming and iterative process. This project aims to reduce the time and effort needed to develop such models by providing a tool that can quickly prototype multiple machine-learning models for grid-like sensor networks. This tool can help to reduce the time and effort needed to develop models for grid-like sensor networks, as well as improve the accuracy and efficiency of the models. Additionally, the tool can help to reduce the need for extensive preprocessing of the data, as well as the need to experiment with multiple algorithms and fine-tune their hyperparameters. The models employed in this project include Convolutional Neural Networks (CNNs), Transformers, CatBoost, and Hoeffding Trees. The performance of these models is evaluated using ROC AUC scores, F1 scores.
 
 ## Table of contents
 - [Structure](#structure)
